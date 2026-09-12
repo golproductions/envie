@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Envie verification engine: machine-checks a rendered video before delivery.
+// Envie. Copyright (c) 2026 GOL Productions (https://golproductions.com). See LICENSE.
+// Verification engine: machine-checks a rendered video before delivery.
 // Gates:
 //   G1 container   file exists, >100KB, valid container, duration >= 2.9s
 //   G2 streams     has video stream AND audio stream

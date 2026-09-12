@@ -1,4 +1,5 @@
-// Envie render engine: deterministic HTML -> MP4.
+// Envie. Copyright (c) 2026 GOL Productions (https://golproductions.com). See LICENSE.
+// Render engine: deterministic HTML -> MP4.
 // Drives a headless Chrome over CDP, seeks every CSS/WAAPI animation
 // frame-by-frame (no wall-clock flakiness), pipes PNG frames to ffmpeg.
 // Zero npm dependencies: Node's built-in WebSocket + child_process.

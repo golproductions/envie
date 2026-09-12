@@ -1,4 +1,5 @@
-// Envie narration: local TTS to WAV.
+// Envie. Copyright (c) 2026 GOL Productions (https://golproductions.com). See LICENSE.
+// Narration: local TTS to WAV.
 // Windows: SAPI via PowerShell (no keys, no network). Other platforms: not yet.
 
 const { execFileSync } = require('child_process');

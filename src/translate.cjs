@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Envie translation engine: read a rendered video back in full, in a language
+// Envie. Copyright (c) 2026 GOL Productions (https://golproductions.com). See LICENSE.
+// Translation engine: read a rendered video back in full, in a language
 // an AI actually consumes. Not sampling (5 stills), not catastrophe gates
 // (not-black, not-silent). This walks EVERY frame and the WHOLE audio track and
 // turns the file into numbers + images:

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Envie: type into your AI, get a video. MCP server + CLI.
+// Envie. Copyright (c) 2026 GOL Productions (https://golproductions.com). See LICENSE.
+// MCP server + CLI.
 // Commands:
 //   envie render <composition.html> -o out.mp4 [--narration "text" | --audio track.wav] [--voice NAME] [--fps N] [--format ...]
 //   (renders are free: no charge, no watermark, no account. Runs entirely on
@@ -402,13 +403,42 @@ function mcpServer() {
     console.log(GUIDE);
   } else if (cmd === 'mcp') {
     mcpServer();
+  } else if (cmd === 'setup') {
+    // One-liner: detect Claude Code, register MCP, done.
+    const { execSync: ex } = require('child_process');
+    let hasClaude = false;
+    try { ex('claude --version', { stdio: 'pipe', windowsHide: true }); hasClaude = true; } catch {}
+    if (hasClaude) {
+      console.log('[envie] Registering MCP server with Claude Code...');
+      const config = JSON.stringify({ command: 'npx', args: ['-y', '@golproductions/envie', 'mcp'] });
+      const escaped = process.platform === 'win32' ? config.replace(/"/g, '\\"') : config.replace(/'/g, "'\\''");
+      const cmd2 = process.platform === 'win32'
+        ? `claude mcp add-json --scope user envie "${escaped}"`
+        : `claude mcp add-json --scope user envie '${escaped}'`;
+      try {
+        ex(cmd2, { stdio: 'pipe', windowsHide: true });
+        console.log('[envie] Done. Envie is registered.');
+        console.log('[envie] Ask your AI: "make me a 15-second launch video for my app"');
+        console.log('[envie] golproductions.com/envie');
+      } catch (e) {
+        console.error('[envie] Auto-register failed: ' + (e.message || e));
+        console.log('[envie] Manual: claude mcp add envie -- npx -y @golproductions/envie mcp');
+      }
+    } else {
+      console.log('[envie] Claude Code not found. Add Envie to any MCP client:\n');
+      console.log(JSON.stringify({ mcpServers: { envie: { command: 'npx', args: ['-y', '@golproductions/envie', 'mcp'] } } }, null, 2));
+      console.log('\nOr install Claude Code first: https://claude.ai/code');
+    }
   } else if (cmd === 'install') {
+    // Legacy alias for setup
     console.log('Add Envie to Claude Code:\n');
+    console.log('  npx @golproductions/envie setup\n');
+    console.log('Or manually:\n');
     console.log('  claude mcp add envie -- npx -y @golproductions/envie mcp\n');
-    console.log('Or in any MCP config (Cursor, etc):\n');
+    console.log('Any MCP config (Cursor, etc):\n');
     console.log(JSON.stringify({ mcpServers: { envie: { command: 'npx', args: ['-y', '@golproductions/envie', 'mcp'] } } }, null, 2));
   } else {
-    console.log('envie <render|see|verify|translate|guide|mcp|install>');
+    console.log('envie <render|see|verify|translate|guide|mcp|setup>');
     console.log('Type into your AI. Get a verified video. golproductions.com/envie');
   }
 })().catch(e => {

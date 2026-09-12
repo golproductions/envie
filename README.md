@@ -3,16 +3,24 @@
 **AI video, verified.** Describe a video to your AI and get a real file back. Envie gives Claude Code and any MCP client a deterministic render engine: headless Chrome filmed frame by frame, six verification gates, and a full read-back layer. Free. No watermark. No account.
 
 ```
+npx @golproductions/envie setup
+```
+
+That's it. It registers the MCP server with Claude Code automatically. Then ask your AI: *make me a 15-second vertical launch video for my app*
+
+<details>
+<summary>Manual install</summary>
+
+Claude Code:
+```
 claude mcp add envie -- npx -y @golproductions/envie mcp
 ```
 
 Any MCP client:
-
 ```json
 { "mcpServers": { "envie": { "command": "npx", "args": ["-y", "@golproductions/envie", "mcp"] } } }
 ```
-
-Then ask your AI: *make me a 15-second vertical launch video for my app*
+</details>
 
 ---
 
@@ -48,6 +56,7 @@ Runs entirely on your machine. It never contacts GOL servers.
 ## CLI
 
 ```
+npx @golproductions/envie setup                          # register MCP server in one step
 envie render <composition.html> -o out.mp4  [--narration "text" | --audio file]
                                             [--fps N] [--format h264|h265|prores|prores4444|dnxhr]
 envie see    <composition.html|video.mp4>   [--at 1000,4000] [-o dir]
