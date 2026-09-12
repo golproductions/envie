@@ -21,10 +21,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # No registry-url here on purpose. It makes setup-node write an .npmrc
+      # pinning _authToken to an empty NODE_AUTH_TOKEN, and that empty token
+      # takes precedence over OIDC — npm then sends blank credentials and the
+      # registry answers 404. npm defaults to registry.npmjs.org anyway.
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
 
       # Trusted publishing needs npm >= 11.5.1
       - name: Upgrade npm
