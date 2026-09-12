@@ -1,0 +1,44 @@
+name: Publish to npm
+
+# Trusted publishing (OIDC). No tokens, no OTP prompts.
+# npm verifies this workflow's identity directly with GitHub.
+# Release: bump the version in package.json, then push a matching tag.
+#   git tag v0.8.0 && git push origin v0.8.0
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # required for OIDC — without this npm cannot verify the run
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing needs npm >= 11.5.1
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
+      - name: Verify tag matches package.json version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "$PKG" ]; then
+            echo "Tag $TAG does not match package.json version $PKG"
+            exit 1
+          fi
+          echo "Publishing $PKG"
+
+      - name: Publish
+        run: npm publish --access public
