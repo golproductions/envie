@@ -67,12 +67,14 @@ Compositions can declare what they intend to achieve. Envie checks them post-ren
       data-expect-no-holds-longer-than="3">
 ```
 
-## Terms
+## Your work is yours
 
-By using Envie you agree to the [Terms of Service](https://golproductions.com/terms). What you render is yours -- GOL claims no ownership over your compositions or video files.
-
-[Product](https://golproductions.com/envie) · [GOL Productions](https://golproductions.com)
+GOL claims no ownership over your compositions or the videos you render. Envie runs on your machine, and nothing you make with it reaches us.
 
 ## License
 
 MIT. Free and open source. By [GOL Productions](https://golproductions.com).
+
+The names "Envie" and "GOL Productions" are trademarks of GOL Productions and are not licensed under MIT. Fork the code freely; a fork must use a different name.
+
+[Product](https://golproductions.com/envie) · [GOL Productions](https://golproductions.com) · [GitHub](https://github.com/golproductions/envie)
