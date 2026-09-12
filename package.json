@@ -1,0 +1,45 @@
+{
+  "name": "@golproductions/envie",
+  "version": "0.8.0",
+  "description": "Type into your AI to generate videos, then read them back in full. Envie gives Claude Code, Cursor, and any MCP client a deterministic, verified video render engine plus a translation layer that turns a finished video into motion, loudness, and sync an AI can actually judge. Free, no watermark, no account. By GOL Productions.",
+  "bin": {
+    "envie": "src/cli.cjs"
+  },
+  "main": "src/cli.cjs",
+  "scripts": {
+    "build": "node build.cjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.0"
+  },
+  "files": [
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "video",
+    "ai",
+    "claude-code",
+    "cursor",
+    "video-generation",
+    "video-analysis",
+    "video-verification",
+    "launch-video"
+  ],
+  "author": "GOL Productions <support@golproductions.com>",
+  "license": "MIT",
+  "homepage": "https://golproductions.com/envie/",
+  "engines": {
+    "node": ">=24"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/golproductions/envie.git"
+  },
+  "bugs": {
+    "url": "https://github.com/golproductions/envie/issues"
+  }
+}

@@ -1,0 +1,13 @@
+.npmrc
+node_modules/
+dist/
+docs/
+proofs/
+worker/
+*.tar.gz
+*.jsc
+# capture / proof artifacts (regenerated, never shipped)
+*.mp4
+*.mov
+*.wav
+see-*.jpg
