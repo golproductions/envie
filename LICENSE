@@ -1,4 +1,4 @@
-MIT License
+GOL Open License
 
 Copyright (c) 2026 GOL Productions (https://golproductions.com)
 
@@ -9,13 +9,26 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. ATTRIBUTION. The above copyright notice, this permission notice, and
+   clear attribution to GOL Productions (including the name
+   "GOL Productions" and a link to https://golproductions.com where
+   practicable) must be included in all copies, substantial portions,
+   forks, derivative works, and redistributions of the Software —
+   whether modified or unmodified, in source or binary form. You may not
+   remove, obscure, or alter this attribution in any way.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. BRANDING. The Software is a product of GOL Productions. You may use it
+   freely, but you may not present it, or any derivative of it, as
+   originating from anyone other than GOL Productions. Forks and
+   derivative works must clearly state that they are based on software by
+   GOL Productions.
+
+3. NO WARRANTY. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+   KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL GOL PRODUCTIONS BE LIABLE FOR ANY
+   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. YOU USE IT AT
+   YOUR OWN RISK AND ARE SOLELY LIABLE FOR ANYTHING THAT RESULTS FROM
+   YOUR USE OF IT.

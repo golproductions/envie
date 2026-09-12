@@ -1,7 +1,7 @@
 {
   "name": "@golproductions/envie",
-  "version": "0.8.0",
-  "description": "Type into your AI to generate videos, then read them back in full. Envie gives Claude Code, Cursor, and any MCP client a deterministic, verified video render engine plus a translation layer that turns a finished video into motion, loudness, and sync an AI can actually judge. Free, no watermark, no account. By GOL Productions.",
+  "version": "0.8.1",
+  "description": "Verified AI video. Describe a video to your AI, get a real file back. Deterministic rendering, six verification gates, full read-back. Free and open source. By GOL Productions.",
   "bin": {
     "envie": "src/cli.cjs"
   },
@@ -30,7 +30,7 @@
     "launch-video"
   ],
   "author": "GOL Productions <support@golproductions.com>",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "homepage": "https://golproductions.com/envie/",
   "engines": {
     "node": ">=24"

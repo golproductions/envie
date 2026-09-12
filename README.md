@@ -73,8 +73,10 @@ GOL claims no ownership over your compositions or the videos you render. Envie r
 
 ## License
 
-MIT. Free and open source. By [GOL Productions](https://golproductions.com).
+Free and open source. See [LICENSE](./LICENSE). The names "Envie" and "GOL Productions" are trademarks of GOL Productions. Forks must use a different name.
 
-The names "Envie" and "GOL Productions" are trademarks of GOL Productions and are not licensed under MIT. Fork the code freely; a fork must use a different name.
+## GOL Productions
 
-[Product](https://golproductions.com/envie) · [GOL Productions](https://golproductions.com) · [GitHub](https://github.com/golproductions/envie)
+Envie is part of the [GOL Productions](https://golproductions.com) toolchain. See also [Check](https://golproductions.com/check), the anti-hallucination layer for Claude Code, and [Exnos](https://golproductions.com/exnos), live browser verification.
+
+[Product page](https://golproductions.com/envie) · [GOL Productions](https://golproductions.com) · [GitHub](https://github.com/golproductions/envie)
