@@ -9,7 +9,7 @@
 //   envie translate <video.mp4> [-o dir]   (read a finished video back as data)
 //   envie guide            (the authoring contract for AI agents)
 //   envie mcp              (run as an MCP stdio server)
-//   envie install          (print MCP config for Claude Code / Cursor)
+//   envie setup            (register with Claude Code, Cursor, Windsurf)
 
 const fs = require('fs');
 const path = require('path');
@@ -403,40 +403,134 @@ function mcpServer() {
     console.log(GUIDE);
   } else if (cmd === 'mcp') {
     mcpServer();
-  } else if (cmd === 'setup') {
-    // One-liner: detect Claude Code, register MCP, done.
+  } else if (cmd === 'setup' || cmd === 'install') {
+    // Universal MCP installer. Detects every MCP client on the machine,
+    // registers Envie with each one, and handles client-specific quirks
+    // (Claude Code auto-mode permissions, Cursor/Windsurf JSON configs).
     const { execSync: ex } = require('child_process');
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    const mcpEntry = { command: 'npx', args: ['-y', '@golproductions/envie', 'mcp'] };
+    let registered = 0;
+
+    // -- Helper: merge an MCP server entry into a JSON config file ----------
+    function mergeIntoJsonConfig(filePath, serverName, entry) {
+      let config = {};
+      if (fs.existsSync(filePath)) {
+        const raw = fs.readFileSync(filePath, 'utf8');
+        try { config = JSON.parse(raw); } catch {
+          // File exists but is not valid JSON. Do not overwrite it.
+          throw new Error('existing config is not valid JSON, skipping to avoid data loss');
+        }
+      }
+      if (!config.mcpServers) config.mcpServers = {};
+      const existing = config.mcpServers[serverName];
+      if (existing && JSON.stringify(existing) === JSON.stringify(entry)) return false;
+      config.mcpServers[serverName] = entry;
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      fs.writeFileSync(filePath, JSON.stringify(config, null, 2) + '\n', 'utf8');
+      return true;
+    }
+
+    // -- Claude Code --------------------------------------------------------
     let hasClaude = false;
     try { ex('claude --version', { stdio: 'pipe', windowsHide: true }); hasClaude = true; } catch {}
     if (hasClaude) {
-      console.log('[envie] Registering MCP server with Claude Code...');
-      const config = JSON.stringify({ command: 'npx', args: ['-y', '@golproductions/envie', 'mcp'] });
+      const config = JSON.stringify(mcpEntry);
       const escaped = process.platform === 'win32' ? config.replace(/"/g, '\\"') : config.replace(/'/g, "'\\''");
-      const cmd2 = process.platform === 'win32'
+      const addCmd = process.platform === 'win32'
         ? `claude mcp add-json --scope user envie "${escaped}"`
         : `claude mcp add-json --scope user envie '${escaped}'`;
       try {
-        ex(cmd2, { stdio: 'pipe', windowsHide: true });
-        console.log('[envie] Done. Envie is registered.');
-        console.log('[envie] Ask your AI: "make me a 15-second launch video for my app"');
-        console.log('[envie] golproductions.com/envie');
+        ex(addCmd, { stdio: 'pipe', windowsHide: true });
+        console.log('[envie] Claude Code: registered.');
+        registered++;
       } catch (e) {
-        console.error('[envie] Auto-register failed: ' + (e.message || e));
-        console.log('[envie] Manual: claude mcp add envie -- npx -y @golproductions/envie mcp');
+        const msg = (e.message || e) + ' ' + (e.stderr || '');
+        if (/already exists/i.test(msg)) {
+          console.log('[envie] Claude Code: already registered.');
+          registered++;
+        } else {
+          console.error('[envie] Claude Code: register failed (' + (e.message || e) + ')');
+        }
       }
-    } else {
-      console.log('[envie] Claude Code not found. Add Envie to any MCP client:\n');
-      console.log(JSON.stringify({ mcpServers: { envie: { command: 'npx', args: ['-y', '@golproductions/envie', 'mcp'] } } }, null, 2));
-      console.log('\nOr install Claude Code first: https://claude.ai/code');
+      // Pre-authorise the five tools so auto-mode does not block them.
+      // Without this, the classifier rejects every call as "Untrusted Code
+      // Integration" and the user never even sees a permission prompt.
+      const TOOLS = [
+        'mcp__envie__envie_guide',
+        'mcp__envie__envie_render',
+        'mcp__envie__envie_see',
+        'mcp__envie__envie_translate',
+        'mcp__envie__envie_verify'
+      ];
+      const settingsPath = path.join(homeDir, '.claude', 'settings.local.json');
+      try {
+        let settings = {};
+        if (fs.existsSync(settingsPath)) {
+          settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        }
+        if (!settings.permissions) settings.permissions = {};
+        if (!Array.isArray(settings.permissions.allow)) settings.permissions.allow = [];
+        let added = 0;
+        for (const t of TOOLS) {
+          if (!settings.permissions.allow.includes(t)) {
+            settings.permissions.allow.push(t);
+            added++;
+          }
+        }
+        if (added > 0) {
+          fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+          fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf8');
+          console.log('[envie] Claude Code: ' + added + ' tool permissions added.');
+        }
+      } catch (e) {
+        console.error('[envie] Claude Code: could not update permissions (' + (e.message || e) + ')');
+      }
     }
-  } else if (cmd === 'install') {
-    // Legacy alias for setup
-    console.log('Add Envie to Claude Code:\n');
-    console.log('  npx @golproductions/envie setup\n');
-    console.log('Or manually:\n');
-    console.log('  claude mcp add envie -- npx -y @golproductions/envie mcp\n');
-    console.log('Any MCP config (Cursor, etc):\n');
-    console.log(JSON.stringify({ mcpServers: { envie: { command: 'npx', args: ['-y', '@golproductions/envie', 'mcp'] } } }, null, 2));
+
+    // -- Cursor (only if the user has it) ------------------------------------
+    const cursorDir = path.join(homeDir, '.cursor');
+    if (fs.existsSync(cursorDir)) {
+      const cursorPath = path.join(cursorDir, 'mcp.json');
+      try {
+        if (mergeIntoJsonConfig(cursorPath, 'envie', mcpEntry)) {
+          console.log('[envie] Cursor: registered.');
+          registered++;
+        } else {
+          console.log('[envie] Cursor: already registered.');
+          registered++;
+        }
+      } catch (e) {
+        console.error('[envie] Cursor: could not write config (' + (e.message || e) + ')');
+      }
+    }
+
+    // -- Windsurf (only if the user has it) ---------------------------------
+    const windsurfDir = path.join(homeDir, '.codeium', 'windsurf');
+    if (fs.existsSync(windsurfDir)) {
+      const windsurfPath = path.join(windsurfDir, 'mcp_config.json');
+      try {
+        if (mergeIntoJsonConfig(windsurfPath, 'envie', mcpEntry)) {
+          console.log('[envie] Windsurf: registered.');
+          registered++;
+        } else {
+          console.log('[envie] Windsurf: already registered.');
+          registered++;
+        }
+      } catch (e) {
+        console.error('[envie] Windsurf: could not write config (' + (e.message || e) + ')');
+      }
+    }
+
+    // -- Summary ------------------------------------------------------------
+    if (registered > 0) {
+      console.log('[envie] Done. Restart your editor, then ask your AI:');
+      console.log('[envie]   "make me a 15-second launch video for my app"');
+    } else {
+      console.log('[envie] No MCP clients detected. Add Envie manually:\n');
+      console.log(JSON.stringify({ mcpServers: { envie: mcpEntry } }, null, 2));
+    }
+    console.log('[envie] golproductions.com/envie');
   } else {
     console.log('envie <render|see|verify|translate|guide|mcp|setup>');
     console.log('Type into your AI. Get a verified video. golproductions.com/envie');

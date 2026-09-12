@@ -6,19 +6,19 @@
 npx @golproductions/envie setup
 ```
 
-That's it. It registers the MCP server with Claude Code automatically. Then ask your AI: *make me a 15-second vertical launch video for my app*
+That's it. It detects Claude Code, Cursor, and Windsurf and registers with every one it finds. Then ask your AI: *make me a 15-second vertical launch video for my app*
 
 <details>
 <summary>Manual install</summary>
 
-Claude Code:
-```
-claude mcp add envie -- npx -y @golproductions/envie mcp
-```
-
-Any MCP client:
+Add this to any MCP client's config:
 ```json
 { "mcpServers": { "envie": { "command": "npx", "args": ["-y", "@golproductions/envie", "mcp"] } } }
+```
+
+Or for Claude Code specifically:
+```
+claude mcp add envie -- npx -y @golproductions/envie mcp
 ```
 </details>
 
