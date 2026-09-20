@@ -1,47 +1,125 @@
 # Envie
 
-**AI video, verified.** Describe a video to your AI and get a real file back. Envie gives Claude Code and any MCP client a deterministic render engine: headless Chrome filmed frame by frame, six verification gates, and a full read-back layer. Free. No watermark. No account.
+**AI video, verified.**
+
+Describe a video to your AI. Get a real file back.
+
+Envie gives Claude Code and any MCP client a deterministic render engine: headless Chrome filmed frame by frame, six verification gates, and a full read-back layer. Free. No watermark. No account.
+
+By [GOL Productions](https://golproductions.com).
+
+---
+
+## The Problem
+
+AI can write code. AI can describe video. But AI can't see what it made—so it guesses, you render, it's wrong, you describe what's wrong, repeat.
+
+## The Solution
+
+```
+You: "Make me a 15-second launch video for my app"
+AI:  [writes HTML composition]
+AI:  [calls envie_render]
+AI:  [calls envie_see to check frames]
+AI:  "Done. Video at output.mp4. All 6 gates passed."
+```
+
+Envie renders what your AI writes, verifies it machine-checks, and lets your AI see the result. No guessing.
+
+---
+
+## Install
 
 ```
 npx @golproductions/envie setup
 ```
 
-That's it. It detects Claude Code, Cursor, and Windsurf and registers with every one it finds. Then ask your AI: *make me a 15-second vertical launch video for my app*
+Detects Claude Code, Cursor, Windsurf—registers with all of them. Then just ask:
+
+> "Make me a 15-second vertical launch video for my app"
 
 <details>
 <summary>Manual install</summary>
 
-Add this to any MCP client's config:
 ```json
 { "mcpServers": { "envie": { "command": "npx", "args": ["-y", "@golproductions/envie", "mcp"] } } }
 ```
 
-Or for Claude Code specifically:
+Or for Claude Code:
 ```
 claude mcp add envie -- npx -y @golproductions/envie mcp
 ```
+
 </details>
 
 ---
 
-## What happens
+## How It Works
 
-1. **Write.** Your AI reads `envie_guide` and writes a composition: one self-contained HTML file with CSS animations, WebGL, Canvas, GIFs -- whatever it needs.
-2. **Render.** `envie_render` films it deterministically. Headless Chrome, every frame seeked with a virtualized clock. Same composition, same video, every time.
-3. **Verify.** Six gates inspect the result: container, both streams, audible audio, no black segments, no freezes, no dead ending. A failing video is never delivered -- your AI gets the report and fixes it.
-4. **See.** `envie_see` returns frames at chosen timestamps so your AI can judge layout and pacing, not just whether the file exists.
-5. **Translate.** `envie_translate` reads the file back as data: per-frame motion, every cut and fade, still holds, LUFS, true peak, and how each audio hit sits against the nearest picture event.
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   WRITE     │ ──► │   RENDER    │ ──► │   VERIFY    │ ──► │    SEE      │
+│             │     │             │     │             │     │             │
+│ AI writes   │     │ Chrome films│     │ 6 gates     │     │ AI checks   │
+│ HTML comp   │     │ frame by    │     │ machine-    │     │ frames at   │
+│             │     │ frame       │     │ check video │     │ timestamps  │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+### 1. Write
+
+Your AI reads `envie_guide` and writes a composition: one self-contained HTML file with CSS animations, WebGL, Canvas, GIFs—whatever the browser can render.
+
+### 2. Render
+
+`envie_render` films it deterministically. Headless Chrome with a virtualized clock: `performance.now()`, `Date.now()`, `requestAnimationFrame`, `setTimeout`—all seeked frame by frame.
+
+**Same composition = same video. Every time.**
+
+### 3. Verify
+
+Six gates machine-check the result before delivery:
+
+| Gate | What it checks |
+|------|----------------|
+| **G1** | File exists, valid container, ≥2.9s duration |
+| **G2** | Has both video and audio streams |
+| **G3** | Audio isn't silent (mean > -50dB) |
+| **G4** | No black segment > 2 seconds |
+| **G5** | No freeze > 8 seconds, < 60% total still time |
+| **G6** | Final 15% isn't dead (frozen or black) |
+
+A failing video is **never delivered**. Your AI gets the report and fixes it.
+
+### 4. See
+
+`envie_see` returns frames at chosen timestamps so your AI can judge layout and pacing—not just whether the file exists.
+
+### 5. Translate
+
+`envie_translate` reads the finished file as data: per-frame motion, every cut and fade, still holds, LUFS, true peak, and how each audio hit sits against the nearest picture event.
+
+---
 
 ## Requirements
 
-- **Node 24** -- or later
-- **Google Chrome** -- or set `ENVIE_CHROME` to your binary
-- **ffmpeg + ffprobe** -- on PATH
-- **Audio** -- a video with no audio fails G2 and G3
-  - `--narration "text"` -- local TTS voiceover, Windows only (SAPI)
-  - `--audio file.wav` -- lays over any wav/mp3/m4a, all platforms
+| Requirement | Notes |
+|-------------|-------|
+| **Node 24+** | Or later |
+| **Chrome** | Or set `ENVIE_CHROME` to your binary |
+| **ffmpeg + ffprobe** | Must be on PATH |
+| **Audio** | Required. Videos with no audio fail G2 and G3 |
 
-Runs entirely on your machine. It never contacts GOL servers.
+### Audio options
+
+| Option | Platform | Description |
+|--------|----------|-------------|
+| `--narration "text"` | Windows only | Local TTS voiceover (SAPI) |
+| `--audio file.wav` | All platforms | Overlay any wav/mp3/m4a |
+
+Runs entirely on your machine. Nothing reaches GOL servers.
+
+---
 
 ## Formats
 
@@ -53,22 +131,80 @@ Runs entirely on your machine. It never contacts GOL servers.
 | `--format prores4444` | .mov | ProRes 4444 10-bit |
 | `--format dnxhr` | .mov | DNxHR HQ |
 
+---
+
 ## CLI
 
 ```
-npx @golproductions/envie setup                          # register MCP server in one step
-envie render <composition.html> -o out.mp4  [--narration "text" | --audio file]
-                                            [--fps N] [--format h264|h265|prores|prores4444|dnxhr]
-envie see    <composition.html|video.mp4>   [--at 1000,4000] [-o dir]
-envie verify <video.mp4>
-envie translate <video.mp4>                 [-o dir]
-envie guide
-envie mcp
+npx @golproductions/envie setup                          # register MCP server
+envie render <comp.html> -o out.mp4 [options]            # render video
+envie see    <comp.html|video.mp4> [--at 1000,4000]      # extract frames
+envie verify <video.mp4>                                 # run gates
+envie translate <video.mp4>                              # analyze motion/audio
+envie guide                                              # print authoring guide
+envie mcp                                                # start MCP server
 ```
 
-## Intent assertions
+### Render options
 
-Compositions can declare what they intend to achieve. Envie checks them post-render and fails `verified` if they are missed.
+```
+--narration "text"     # TTS voiceover (Windows)
+--audio file.wav       # Overlay audio file
+--fps 24               # Frame rate (default: 24)
+--format h264          # Output codec
+-o output.mp4          # Output path
+```
+
+---
+
+## Composition Format
+
+One self-contained HTML file:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; }
+  /* your animations */
+</style>
+</head>
+<body data-duration-ms="15000" data-width="1080" data-height="1920">
+  <!-- your content -->
+</body>
+</html>
+```
+
+### Required attributes
+
+| Attribute | Description |
+|-----------|-------------|
+| `data-duration-ms` | Video length in milliseconds (3000–300000) |
+| `data-width` | Canvas width (default: 1920) |
+| `data-height` | Canvas height (default: 1080) |
+
+### What's virtualized
+
+Everything the browser can animate:
+- CSS animations, transitions
+- Web Animations API
+- `requestAnimationFrame`
+- `setTimeout`, `setInterval`
+- Canvas 2D, WebGL
+- `performance.now()`, `Date.now()`, `new Date()`
+- Animated images (GIF, WebP, APNG, AVIF)
+- `Math.random()`, `crypto.getRandomValues` (seeded)
+
+**NOT virtualized** (avoid):
+- Web Workers
+- WebAudio-driven visuals
+
+---
+
+## Intent Assertions
+
+Declare what the composition must achieve:
 
 ```html
 <body data-duration-ms="12000"
@@ -76,16 +212,57 @@ Compositions can declare what they intend to achieve. Envie checks them post-ren
       data-expect-no-holds-longer-than="3">
 ```
 
-## Your work is yours
+| Assertion | Meaning |
+|-----------|---------|
+| `data-expect-sync-ms="120"` | Audio hits must land within 120ms of a picture event |
+| `data-expect-no-holds-longer-than="3"` | No still hold may exceed 3 seconds |
 
-GOL claims no ownership over your compositions or the videos you render. Envie runs on your machine, and nothing you make with it reaches us.
+Failures are reported test-style:
+
+```
+SYNC FAIL: mean audio-to-picture offset 380ms exceeds tolerance 120ms
+HOLD FAIL: 2 hold(s) exceed 3s: 4.20s @0.40s, 3.10s @7.80s
+```
+
+---
+
+## Deterministic Rendering
+
+The render engine virtualizes time itself:
+
+```javascript
+// Inside the page during render:
+performance.now()  // → virtual clock
+Date.now()         // → virtual clock
+new Date()         // → virtual clock
+Math.random()      // → seeded PRNG
+
+// Same seed, same composition = identical output
+```
+
+This is how the same HTML produces the same video, every render.
+
+---
+
+## Your Work Is Yours
+
+GOL claims no ownership over your compositions or videos. Envie runs on your machine. Nothing you make reaches us.
+
+---
 
 ## License
 
-Free and open source. See [LICENSE](./LICENSE). The names "Envie" and "GOL Productions" are trademarks of GOL Productions. Forks must use a different name.
+MIT. Free and open source. See [LICENSE](./LICENSE).
+
+"Envie" and "GOL Productions" are trademarks. Forks must use a different name.
+
+---
 
 ## GOL Productions
 
-Envie is part of the [GOL Productions](https://golproductions.com) toolchain. See also [Check](https://golproductions.com/check), the anti-hallucination layer for Claude Code, and [Exnos](https://golproductions.com/exnos), live browser verification.
+Envie is part of the [GOL Productions](https://golproductions.com) toolchain.
 
-[Product page](https://golproductions.com/envie) · [GOL Productions](https://golproductions.com) · [GitHub](https://github.com/golproductions/envie)
+- **[Check](https://golproductions.com/check)** — Anti-hallucination layer for Claude Code
+- **[Exnos](https://golproductions.com/exnos)** — Live browser verification
+
+[Product page](https://golproductions.com/envie) · [GitHub](https://github.com/golproductions/envie)
