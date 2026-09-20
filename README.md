@@ -242,6 +242,18 @@ Math.random()      // → seeded PRNG
 
 This is how the same HTML produces the same video, every render.
 
+### What "deterministic" means
+
+**Same machine + same Chrome version + same composition = bit-identical output.**
+
+Cross-environment, you may see variation from:
+- Font rendering (anti-aliasing, hinting differ by OS/GPU)
+- WebGL/Canvas floating-point precision
+- Chrome version changes
+- System font fallbacks (embed fonts to avoid)
+
+The guarantee is reproducibility on your machine, not cross-platform bit-identity. That's the right scope: your AI iterates locally, re-renders, gets the same result.
+
 ---
 
 ## Your Work Is Yours
