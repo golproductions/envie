@@ -137,6 +137,7 @@ Runs entirely on your machine. Nothing reaches GOL servers.
 
 ```
 npx @golproductions/envie setup                          # register MCP server
+npx @golproductions/envie uninstall                      # remove everything setup added
 envie render <comp.html> -o out.mp4 [options]            # render video
 envie see    <comp.html|video.mp4> [--at 1000,4000]      # extract frames
 envie verify <video.mp4>                                 # run gates

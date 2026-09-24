@@ -9,22 +9,20 @@
 //   G5 freeze      no single static segment > 8s; cumulative still time must not exceed 60% of runtime
 //   G6 dead-end    the final 15% of the video must not be one frozen/black stretch
 
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-function run(cmd) {
-  try { return execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024, windowsHide: true }); }
-  catch (e) { return (e.stdout || '') + (e.stderr || ''); }
+// Programs run with an argument list and no shell: the video path is passed as
+// data, so no character in it can be read as shell syntax.
+const RUN_OPTS = { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, windowsHide: true };
+function run(bin, args) {
+  const r = spawnSync(bin, args, RUN_OPTS);
+  return r.status === 0 ? (r.stdout || '') : (r.stdout || '') + (r.stderr || '');
 }
-function runErr(cmd) {
-  const tmp = path.join(os.tmpdir(), 'envie-stderr-' + process.pid + '-' + Date.now() + '.txt');
-  try { execSync(cmd + ' 2> "' + tmp + '"', { encoding: 'utf8', stdio: 'pipe', maxBuffer: 64 * 1024 * 1024, windowsHide: true }); }
-  catch (e) { }
-  const out = fs.existsSync(tmp) ? fs.readFileSync(tmp, 'utf8') : '';
-  try { fs.unlinkSync(tmp); } catch (ex) { }
-  return out;
+function runErr(bin, args) {
+  return spawnSync(bin, args, RUN_OPTS).stderr || '';
 }
 
 function runGates(file) {
@@ -36,7 +34,7 @@ function runGates(file) {
     const size = fs.statSync(file).size;
     if (size < 100 * 1024) { gate('G1', 'container', false, 'file only ' + (size / 1024).toFixed(1) + 'KB'); return report(); }
 
-    const probeRaw = run('ffprobe -v quiet -print_format json -show_format -show_streams "' + file + '"');
+    const probeRaw = run('ffprobe', ['-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', file]);
     let probe;
     try { probe = JSON.parse(probeRaw); } catch (ex) { gate('G1', 'container', false, 'unreadable container'); return report(); }
     const duration = parseFloat((probe.format || {}).duration || '0');
@@ -49,10 +47,10 @@ function runGates(file) {
     gate('G2', 'streams', hasV && hasA, 'video:' + hasV + ' audio:' + hasA);
 
     if (hasA) {
-      const vol = runErr('ffmpeg -hide_banner -i "' + file + '" -map 0:a:0 -af volumedetect -f null -');
+      const vol = runErr('ffmpeg', ['-hide_banner', '-i', file, '-map', '0:a:0', '-af', 'volumedetect', '-f', 'null', '-']);
       const meanMatch = vol.match(/mean_volume:\s*(-?[\d.]+)/);
       const mean = parseFloat(meanMatch ? meanMatch[1] : '-99');
-      const sil = runErr('ffmpeg -hide_banner -i "' + file + '" -map 0:a:0 -af silencedetect=noise=-45dB:d=5 -f null -');
+      const sil = runErr('ffmpeg', ['-hide_banner', '-i', file, '-map', '0:a:0', '-af', 'silencedetect=noise=-45dB:d=5', '-f', 'null', '-']);
       const silences = [];
       const silRe = /silence_duration:\s*([\d.]+)/g;
       let sm;
@@ -63,7 +61,7 @@ function runGates(file) {
       gate('G3', 'silence', false, 'no audio stream to measure');
     }
 
-    const black = runErr('ffmpeg -hide_banner -i "' + file + '" -vf blackdetect=d=2:pix_th=0.02 -an -f null -');
+    const black = runErr('ffmpeg', ['-hide_banner', '-i', file, '-vf', 'blackdetect=d=2:pix_th=0.02', '-an', '-f', 'null', '-']);
     const blackSegs = [];
     const blackRe = /black_start:([\d.]+)\s+black_end:([\d.]+)\s+black_duration:([\d.]+)/g;
     let bm;
@@ -73,7 +71,7 @@ function runGates(file) {
 
     // G5: no single static stretch > 8s AND cumulative still time under 60% of runtime.
     // Receipt G-C: 9.25s of holds in a 12s video passed with g5="none" before this cumulative check.
-    const freezeLog = runErr('ffmpeg -hide_banner -i "' + file + '" -vf freezedetect=n=0.001:d=8 -an -f null -');
+    const freezeLog = runErr('ffmpeg', ['-hide_banner', '-i', file, '-vf', 'freezedetect=n=0.001:d=8', '-an', '-f', 'null', '-']);
     const fStarts = [];
     const fEnds = [];
     const frRe = /freeze_start:\s*([\d.]+)/g;
@@ -88,7 +86,7 @@ function runGates(file) {
     });
 
     // Second pass at d=0.5 to measure cumulative stillness from short holds.
-    const shortLog = runErr('ffmpeg -hide_banner -i "' + file + '" -vf freezedetect=n=0.001:d=0.5 -an -f null -');
+    const shortLog = runErr('ffmpeg', ['-hide_banner', '-i', file, '-vf', 'freezedetect=n=0.001:d=0.5', '-an', '-f', 'null', '-']);
     const shStarts = [];
     const shEnds = [];
     const shRe = /freeze_start:\s*([\d.]+)/g;

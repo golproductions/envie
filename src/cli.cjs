@@ -10,6 +10,7 @@
 //   envie guide            (the authoring contract for AI agents)
 //   envie mcp              (run as an MCP stdio server)
 //   envie setup            (register with Claude Code, Cursor, Windsurf)
+//   envie uninstall        (remove everything setup added)
 
 const fs = require('fs');
 const path = require('path');
@@ -403,6 +404,54 @@ function mcpServer() {
     console.log(GUIDE);
   } else if (cmd === 'mcp') {
     mcpServer();
+  } else if (cmd === 'uninstall') {
+    // Removes exactly what `envie setup` added, and nothing else: the "envie"
+    // MCP entry in Claude Code, Cursor and Windsurf, and the envie tool
+    // permissions in Claude Code. A config that is not valid JSON is left untouched.
+    const { execSync: ex } = require('child_process');
+    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+    let hasClaude = false;
+    try { ex('claude --version', { stdio: 'pipe', windowsHide: true }); hasClaude = true; } catch {}
+    if (hasClaude) {
+      try {
+        ex('claude mcp remove --scope user envie', { stdio: 'pipe', windowsHide: true });
+        console.log('[envie] Claude Code: unregistered.');
+      } catch (e) {
+        const msg = (e.message || e) + ' ' + (e.stderr || '');
+        console.log(/not found|no mcp server/i.test(msg) ? '[envie] Claude Code: was not registered.' : '[envie] Claude Code: could not unregister (' + (e.message || e) + ')');
+      }
+      const settingsPath = path.join(homeDir, '.claude', 'settings.local.json');
+      try {
+        if (fs.existsSync(settingsPath)) {
+          const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+          const allow = settings.permissions && settings.permissions.allow;
+          if (Array.isArray(allow)) {
+            const kept = allow.filter(t => !String(t).startsWith('mcp__envie__'));
+            if (kept.length !== allow.length) {
+              settings.permissions.allow = kept;
+              fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf8');
+              console.log('[envie] Claude Code: ' + (allow.length - kept.length) + ' tool permissions removed.');
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[envie] Claude Code: permissions left unchanged (' + (e.message || e) + ')');
+      }
+    }
+    for (const [label, file] of [['Cursor', path.join(homeDir, '.cursor', 'mcp.json')],
+                                 ['Windsurf', path.join(homeDir, '.codeium', 'windsurf', 'mcp_config.json')]]) {
+      if (!fs.existsSync(file)) continue;
+      try {
+        const config = JSON.parse(fs.readFileSync(file, 'utf8'));
+        if (config.mcpServers && config.mcpServers.envie) {
+          delete config.mcpServers.envie;
+          fs.writeFileSync(file, JSON.stringify(config, null, 2) + '\n', 'utf8');
+          console.log('[envie] ' + label + ': unregistered.');
+        }
+      } catch {
+        console.error('[envie] ' + label + ': left unchanged (config is not valid JSON).');
+      }
+    }
   } else if (cmd === 'setup' || cmd === 'install') {
     // Universal MCP installer. Detects every MCP client on the machine,
     // registers Envie with each one, and handles client-specific quirks

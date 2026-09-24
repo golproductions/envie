@@ -21,14 +21,15 @@
 // Usage: node translate.cjs <video> [--json] [--fps-meta] [--out DIR]
 // Zero npm deps: ffmpeg + ffprobe (already required by the engine).
 
-const { spawnSync, execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
 function findBin(name) {
-  try { execSync(`${name} -version`, { stdio: 'pipe', windowsHide: true }); return name; }
-  catch { throw new Error(`${name} not found on PATH. Install ffmpeg (ships ffmpeg + ffprobe).`); }
+  const r = spawnSync(name, ['-version'], { stdio: 'pipe', windowsHide: true });
+  if (r.status === 0) return name;
+  throw new Error(`${name} not found on PATH. Install ffmpeg (ships ffmpeg + ffprobe).`);
 }
 
 // Run ffmpeg and return its stderr log. ffmpeg writes filter/metadata prints and
@@ -59,8 +60,10 @@ function parseMeta(text) {
 }
 
 function probeContainer(ffprobe, file) {
-  const raw = execSync(`${ffprobe} -v quiet -print_format json -show_format -show_streams "${file}"`,
+  const pr = spawnSync(ffprobe, ['-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', file],
     { encoding: 'utf8', windowsHide: true, maxBuffer: 32 * 1024 * 1024 });
+  if (pr.status !== 0) throw new Error('ffprobe could not read the video: ' + file);
+  const raw = pr.stdout;
   const p = JSON.parse(raw);
   const fmt = p.format || {};
   const v = (p.streams || []).find(s => s.codec_type === 'video') || null;

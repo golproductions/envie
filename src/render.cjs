@@ -4,7 +4,7 @@
 // frame-by-frame (no wall-clock flakiness), pipes PNG frames to ffmpeg.
 // Zero npm dependencies: Node's built-in WebSocket + child_process.
 
-const { spawn, execSync } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -24,8 +24,9 @@ function findChrome() {
 }
 
 function findFfmpeg() {
-  try { execSync('ffmpeg -version', { stdio: 'pipe', windowsHide: true }); return 'ffmpeg'; }
-  catch { throw new Error('ffmpeg not found on PATH. Install ffmpeg first.'); }
+  const r = spawnSync('ffmpeg', ['-version'], { stdio: 'pipe', windowsHide: true });
+  if (r.status === 0) return 'ffmpeg';
+  throw new Error('ffmpeg not found on PATH. Install ffmpeg first.');
 }
 
 class CDP {
@@ -1095,7 +1096,9 @@ function framesFromVideo(videoPath, timestamps = []) {
   const ffmpeg = findFfmpeg();
   const abs = path.resolve(videoPath);
   if (!fs.existsSync(abs)) throw new Error('video not found: ' + abs);
-  const probe = execSync(`ffprobe -v quiet -print_format json -show_format "${abs}"`, { encoding: 'utf8', windowsHide: true });
+  const pr = spawnSync('ffprobe', ['-v', 'quiet', '-print_format', 'json', '-show_format', abs], { encoding: 'utf8', windowsHide: true });
+  if (pr.status !== 0) throw new Error('ffprobe could not read the video: ' + abs);
+  const probe = pr.stdout;
   const durationMs = Math.round(parseFloat((JSON.parse(probe).format || {}).duration || '0') * 1000);
   if (!durationMs) throw new Error('cannot read video duration: ' + abs);
 
@@ -1106,7 +1109,8 @@ function framesFromVideo(videoPath, timestamps = []) {
   const frames = [];
   for (const t of ts) {
     const tmp = path.join(os.tmpdir(), `envie-see-${process.pid}-${t}.jpg`);
-    execSync(`${ffmpeg} -y -ss ${(t / 1000).toFixed(3)} -i "${abs}" -frames:v 1 -q:v 4 "${tmp}"`, { stdio: 'pipe', windowsHide: true });
+    const fr = spawnSync(ffmpeg, ['-y', '-ss', (t / 1000).toFixed(3), '-i', abs, '-frames:v', '1', '-q:v', '4', tmp], { stdio: 'pipe', windowsHide: true });
+    if (fr.status !== 0) throw new Error('ffmpeg could not extract a frame at ' + t + 'ms: ' + abs);
     frames.push({ t, data: fs.readFileSync(tmp).toString('base64'), mimeType: 'image/jpeg' });
     try { fs.unlinkSync(tmp); } catch {}
   }
