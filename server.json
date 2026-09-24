@@ -3,7 +3,7 @@
   "name": "com.golproductions/envie",
   "title": "Envie",
   "description": "Your AI writes HTML; Envie renders it to video on your machine, verifies it and shows it back.",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "websiteUrl": "https://golproductions.com/envie",
   "repository": {
     "url": "https://github.com/golproductions/envie",
@@ -19,7 +19,7 @@
     {
       "registryType": "npm",
       "identifier": "@golproductions/envie",
-      "version": "0.8.6",
+      "version": "0.8.7",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

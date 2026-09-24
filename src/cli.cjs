@@ -10,11 +10,23 @@
 //   envie guide            (the authoring contract for AI agents)
 //   envie mcp              (run as an MCP stdio server)
 //   envie setup            (register with Claude Code, Cursor, Windsurf)
-//   envie uninstall        (remove everything setup added)
+//   envie uninstall        (remove everything Envie added)
 
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+
+// A globally installed copy of Envie (npm install -g). `npx @golproductions/envie`
+// runs that copy instead of the current version, so setup warns about it and
+// uninstall removes it. Returns { dir, version } or null.
+function globalEnvie() {
+  try {
+    const root = require('child_process').execSync('npm root -g', { stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true, timeout: 30000 }).toString().trim();
+    const pj = path.join(root, '@golproductions', 'envie', 'package.json');
+    if (!root || !fs.existsSync(pj)) return null;
+    return { dir: path.dirname(pj), version: JSON.parse(fs.readFileSync(pj, 'utf8')).version || '?' };
+  } catch { return null; }
+}
 const { render, snapshot, framesFromVideo } = require('./render.cjs');
 const { speak } = require('./tts.cjs');
 
@@ -405,9 +417,10 @@ function mcpServer() {
   } else if (cmd === 'mcp') {
     mcpServer();
   } else if (cmd === 'uninstall') {
-    // Removes exactly what `envie setup` added, and nothing else: the "envie"
-    // MCP entry in Claude Code, Cursor and Windsurf, and the envie tool
-    // permissions in Claude Code. A config that is not valid JSON is left untouched.
+    // Removes what Envie has added, and nothing else: the "envie" MCP entry in
+    // Claude Code (user scope, every project's local scope, and this folder's
+    // .mcp.json), Cursor and Windsurf; the envie tool permissions in Claude Code;
+    // and a globally installed copy. A config that is not valid JSON is left untouched.
     const { execSync: ex } = require('child_process');
     const homeDir = process.env.HOME || process.env.USERPROFILE || '';
     let hasClaude = false;
@@ -437,6 +450,30 @@ function mcpServer() {
       } catch (e) {
         console.error('[envie] Claude Code: permissions left unchanged (' + (e.message || e) + ')');
       }
+      // Entries added without --scope user (every README before 0.8.7 said
+      // `claude mcp add envie ...`): Claude Code keeps those per project (local
+      // scope, in ~/.claude.json) or in a project's .mcp.json (project scope).
+      // Removed through Claude Code itself, run from each project's folder.
+      const removeIn = (scope, dir, label) => {
+        try {
+          ex('claude mcp remove --scope ' + scope + ' envie', { cwd: dir, stdio: 'pipe', windowsHide: true });
+          console.log('[envie] Claude Code: unregistered (' + label + ').');
+        } catch (e) {
+          console.log('[envie] Claude Code: could not unregister (' + label + '): ' + String(e.stderr || e.message || e).trim().split('\n')[0]);
+        }
+      };
+      try {
+        const claudeJson = JSON.parse(fs.readFileSync(path.join(homeDir, '.claude.json'), 'utf8'));
+        for (const [dir, project] of Object.entries(claudeJson.projects || {})) {
+          if (!(project && project.mcpServers && project.mcpServers.envie)) continue;
+          if (fs.existsSync(dir)) removeIn('local', dir, 'project ' + dir);
+          else console.log('[envie] Claude Code: left an entry for ' + dir + ' (that folder no longer exists).');
+        }
+      } catch {}
+      try {
+        const mcpJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), '.mcp.json'), 'utf8'));
+        if (mcpJson.mcpServers && mcpJson.mcpServers.envie) removeIn('project', process.cwd(), '.mcp.json in this folder');
+      } catch {}
     }
     for (const [label, file] of [['Cursor', path.join(homeDir, '.cursor', 'mcp.json')],
                                  ['Windsurf', path.join(homeDir, '.codeium', 'windsurf', 'mcp_config.json')]]) {
@@ -450,6 +487,15 @@ function mcpServer() {
         }
       } catch {
         console.error('[envie] ' + label + ': left unchanged (config is not valid JSON).');
+      }
+    }
+    const globalCopy = globalEnvie();
+    if (globalCopy) {
+      try {
+        ex('npm uninstall -g @golproductions/envie', { stdio: 'pipe', windowsHide: true, timeout: 120000 });
+        console.log('[envie] Global install (' + globalCopy.version + '): removed.');
+      } catch (e) {
+        console.log('[envie] Global install (' + globalCopy.version + '): could not remove. Run: npm uninstall -g @golproductions/envie');
       }
     }
   } else if (cmd === 'setup' || cmd === 'install') {
@@ -569,6 +615,14 @@ function mcpServer() {
       } catch (e) {
         console.error('[envie] Windsurf: could not write config (' + (e.message || e) + ')');
       }
+    }
+
+    // -- An older global copy would be run instead of this version -----------
+    const globalCopy = globalEnvie();
+    const thisVersion = require('../package.json').version;
+    if (globalCopy && globalCopy.version !== thisVersion) {
+      console.log('[envie] Warning: Envie ' + globalCopy.version + ' is installed globally, and your editor would run');
+      console.log('[envie] it instead of ' + thisVersion + '. Remove it: npm uninstall -g @golproductions/envie');
     }
 
     // -- Summary ------------------------------------------------------------

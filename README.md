@@ -31,7 +31,7 @@ Envie renders what your AI writes, verifies it machine-checks, and lets your AI 
 ## Install
 
 ```
-npx @golproductions/envie setup
+npx @golproductions/envie@latest setup
 ```
 
 Detects Claude Code, Cursor, Windsurf—registers with all of them. Then just ask:
@@ -47,7 +47,7 @@ Detects Claude Code, Cursor, Windsurf—registers with all of them. Then just as
 
 Or for Claude Code:
 ```
-claude mcp add envie -- npx -y @golproductions/envie mcp
+claude mcp add --scope user envie -- npx -y @golproductions/envie mcp
 ```
 
 </details>
@@ -136,8 +136,8 @@ Runs entirely on your machine. Nothing reaches GOL servers.
 ## CLI
 
 ```
-npx @golproductions/envie setup                          # register MCP server
-npx @golproductions/envie uninstall                      # remove everything setup added
+npx @golproductions/envie@latest setup                   # register MCP server
+npx @golproductions/envie@latest uninstall               # remove everything Envie added
 envie render <comp.html> -o out.mp4 [options]            # render video
 envie see    <comp.html|video.mp4> [--at 1000,4000]      # extract frames
 envie verify <video.mp4>                                 # run gates
@@ -145,6 +145,8 @@ envie translate <video.mp4>                              # analyze motion/audio
 envie guide                                              # print authoring guide
 envie mcp                                                # start MCP server
 ```
+
+`envie` here means `npx @golproductions/envie@latest`. Use `@latest`: plain `npx` runs an older globally installed copy if one exists.
 
 ### Render options
 
