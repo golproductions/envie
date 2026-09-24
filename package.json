@@ -1,7 +1,7 @@
 {
   "name": "@golproductions/envie",
   "mcpName": "com.golproductions/envie",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "description": "Verified AI video. Describe a video to your AI, get a real file back. Deterministic rendering, six verification gates, full read-back. Free and open source. By GOL Productions.",
   "bin": {
     "envie": "src/cli.cjs"

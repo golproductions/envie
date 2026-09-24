@@ -2,7 +2,7 @@
 // Envie. Copyright (c) 2026 GOL Productions (https://golproductions.com). See LICENSE.
 // Verification engine: machine-checks a rendered video before delivery.
 // Gates:
-//   G1 container   file exists, >100KB, valid container, duration >= 2.9s
+//   G1 container   file exists, ffprobe reads it as a media container, duration >= 2.9s
 //   G2 streams     has video stream AND audio stream
 //   G3 silence     audio has real signal (mean volume above -50dB, no full-length silence)
 //   G4 black       no black segment longer than 2s (blackdetect)
@@ -31,15 +31,19 @@ function runGates(file) {
 
   function main() {
     if (!file || !fs.existsSync(file)) { gate('G1', 'container', false, 'file not found'); return report(); }
+    // No size threshold: a short, simple video can be a few dozen KB and still be
+    // valid. Whether the container is real is ffprobe's answer, not a guess from size.
     const size = fs.statSync(file).size;
-    if (size < 100 * 1024) { gate('G1', 'container', false, 'file only ' + (size / 1024).toFixed(1) + 'KB'); return report(); }
+    const sizeText = size >= 1048576 ? (size / 1048576).toFixed(1) + 'MB' : (size / 1024).toFixed(1) + 'KB';
 
     const probeRaw = run('ffprobe', ['-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', file]);
     let probe;
-    try { probe = JSON.parse(probeRaw); } catch (ex) { gate('G1', 'container', false, 'unreadable container'); return report(); }
-    const duration = parseFloat((probe.format || {}).duration || '0');
-    if (!(duration >= 2.9)) { gate('G1', 'container', false, 'duration ' + duration.toFixed(1) + 's'); return report(); }
-    gate('G1', 'container', true, (size / 1048576).toFixed(1) + 'MB, ' + duration.toFixed(1) + 's');
+    try { probe = JSON.parse(probeRaw); } catch (ex) { probe = null; }
+    // Nothing else can be measured in a file ffprobe cannot read, so this one stops.
+    if (!probe || !probe.format || !(probe.streams || []).length) { gate('G1', 'container', false, 'unreadable container (' + sizeText + ')'); return report(); }
+    const duration = parseFloat(probe.format.duration || '0');
+    // A short video still gets every other gate, so every reason is reported at once.
+    gate('G1', 'container', duration >= 2.9, sizeText + ', ' + duration.toFixed(1) + 's' + (duration >= 2.9 ? '' : ' (minimum 2.9s)'));
 
     const streams = probe.streams || [];
     const hasV = streams.some(function(s) { return s.codec_type === 'video'; });
