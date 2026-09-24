@@ -268,9 +268,7 @@ GOL claims no ownership over your compositions or videos. Envie runs on your mac
 
 ## License
 
-Free, under the GOL Open License: use, modify and redistribute it, with attribution to GOL Productions kept in every copy and fork. See [LICENSE](./LICENSE).
-
-"Envie" and "GOL Productions" are trademarks. Forks must use a different name and state that they are based on software by GOL Productions.
+Free to use, personal or commercial, under the GOL Free License. Envie is built by GOL Productions: you may use it and share unmodified copies with the credit, but not publish changed versions, build your own product from it, or sell it. What you make with it is yours. See [LICENSE](./LICENSE).
 
 ---
 
