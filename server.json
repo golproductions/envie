@@ -1,0 +1,43 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.golproductions/envie",
+  "title": "Envie",
+  "description": "Your AI writes HTML; Envie renders it to video on your machine, verifies it and shows it back.",
+  "version": "0.8.6",
+  "websiteUrl": "https://golproductions.com/envie",
+  "repository": {
+    "url": "https://github.com/golproductions/envie",
+    "source": "github"
+  },
+  "icons": [
+    {
+      "src": "https://golproductions.com/logo.png",
+      "mimeType": "image/png"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@golproductions/envie",
+      "version": "0.8.6",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "ENVIE_CHROME",
+          "description": "Path to Chrome, if it is not in the default install location",
+          "isRequired": false,
+          "format": "filepath"
+        }
+      ]
+    }
+  ]
+}

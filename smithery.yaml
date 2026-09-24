@@ -1,0 +1,8 @@
+# Smithery: Envie runs locally over stdio, started with npx.
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties: {}
+  commandFunction: |-
+    () => ({ command: 'npx', args: ['-y', '@golproductions/envie', 'mcp'] })
