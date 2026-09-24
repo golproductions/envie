@@ -89,7 +89,7 @@ Six gates machine-check the result before delivery:
 | **G5** | No freeze > 8 seconds, < 60% total still time |
 | **G6** | Final 15% isn't dead (frozen or black) |
 
-A failing video is **never delivered**. Your AI gets the report and fixes it.
+A failing video comes back marked **FAILED**, with the gate report and an instruction not to deliver it, so your AI fixes the composition and renders again.
 
 ### 4. See
 
@@ -196,9 +196,10 @@ Everything the browser can animate:
 - `performance.now()`, `Date.now()`, `new Date()`
 - Animated images (GIF, WebP, APNG, AVIF)
 - `Math.random()`, `crypto.getRandomValues` (seeded)
+- Classic Web Workers (run on the virtual clock)
 
 **NOT virtualized** (avoid):
-- Web Workers
+- Module Web Workers and strict-mode worker code
 - WebAudio-driven visuals
 
 ---
@@ -265,9 +266,9 @@ GOL claims no ownership over your compositions or videos. Envie runs on your mac
 
 ## License
 
-MIT. Free and open source. See [LICENSE](./LICENSE).
+Free, under the GOL Open License: use, modify and redistribute it, with attribution to GOL Productions kept in every copy and fork. See [LICENSE](./LICENSE).
 
-"Envie" and "GOL Productions" are trademarks. Forks must use a different name.
+"Envie" and "GOL Productions" are trademarks. Forks must use a different name and state that they are based on software by GOL Productions.
 
 ---
 
