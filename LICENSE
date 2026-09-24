@@ -4,8 +4,8 @@ Copyright (c) 2026 GOL Productions (https://golproductions.com). All rights
 reserved, except as granted below.
 
 1. FREE TO USE. You may download, install and use the Software (the files
-   this license comes with) for free, for any purpose, personal or
-   commercial, and make the copies you need to do that.
+   this license comes with) for free, personal or commercial, subject to
+   clause 3, and make the copies you need to do that.
 
 2. SHARING. You may give unmodified copies of the Software to others, free
    of charge, as long as this license and the credit in clause 4 stay with
@@ -14,16 +14,19 @@ reserved, except as granted below.
 3. NOT FOR BUILDING YOUR OWN PRODUCT. You may change the Software for your
    own use. You may not:
    (a) publish or distribute a changed version of the Software;
-   (b) use the Software, or any part of it, to build or release your own
-       product, tool, service or library, including as a hosted service;
-   (c) sell, rent or charge anyone for the Software;
-   (d) remove or work around any part of this license.
+   (b) copy the Software, or any part of its code, into your own product,
+       tool, service or library, or make your own product based on it;
+   (c) offer the Software's functionality to others as a service;
+   (d) sell, rent or charge anyone for the Software;
+   (e) remove or work around any part of this license.
+   Using the Software as a tool while you build or run your own work is
+   allowed: that is what it is for.
 
 4. CREDIT. The Software is built by GOL Productions. Every copy must keep
-   this license and the copyright notice. Wherever you present, list,
-   describe or share the Software, say that it is built by GOL Productions
-   (with a link to https://golproductions.com where practicable), and do
-   not present it as made by anyone else.
+   this license and the copyright notice. Wherever you share or list the
+   Software (for example in a directory, repository or package), say that
+   it is built by GOL Productions (with a link to https://golproductions.com
+   where practicable). Never present it as made by anyone else.
 
 5. NAMES. "GOL Productions", "GOLProductions", "Envie", "Exnos" and
    "Check", and their logos, belong to GOL Productions. This license gives
